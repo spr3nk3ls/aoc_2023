@@ -1,5 +1,6 @@
 import java.util.Map;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class Day1 {
 
@@ -13,7 +14,7 @@ public class Day1 {
         calculate2("src/day1/input1.txt");
     }
 
-    public static void calculate1(String filename) {
+    private static void calculate1(String filename) {
         Util.applyToLines(filename, lines -> {
             var result = lines.map(line -> {
                 var integerPattern = Pattern.compile("\\d");
@@ -27,11 +28,11 @@ public class Day1 {
         });
     }
 
-    public static void calculate2(String filename) {
+    private static void calculate2(String filename) {
         Util.applyToLines(filename, lines -> {
             var result = lines.map(line -> {
                 var correctedLine = correctLine(line);
-                var integerPattern = Pattern.compile("\\d|one|two|three|four|five|six|seven|eight|nine");
+                var integerPattern = Pattern.compile("\\d|" + INTS.keySet().stream().collect(Collectors.joining("|")));
                 var matcher = integerPattern.matcher(correctedLine);
                 var list = matcher.results().toList();
                 var first = getIntFromText(list.get(0).group());
@@ -42,14 +43,14 @@ public class Day1 {
         });
     }
 
-    public static final Integer getIntFromText(String textOrInt){
-        if(INTS.keySet().contains(textOrInt)){
-            return INTS.get(textOrInt);
-        }
-        return Integer.parseInt(textOrInt);
+    private static final Integer getIntFromText(String textOrInt){
+        return INTS.containsKey(textOrInt) ? INTS.get(textOrInt) : Integer.parseInt(textOrInt);
     }
 
-    public static final String correctLine(String line){
+    /*
+     * ew
+     */
+    private static final String correctLine(String line){
         return line.replaceAll("oneight", "oneeight")
             .replaceAll("threeight", "threeeight")
             .replaceAll("fiveight", "fiveeight")
