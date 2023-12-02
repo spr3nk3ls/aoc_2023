@@ -30,4 +30,8 @@ public class Util {
             throw new RuntimeException();
         }
     }
+
+    public static Stream<String> split(String string, String delimiter){
+        return Stream.of(string.split(delimiter));
+    }
 }

@@ -17,26 +17,23 @@ public class Day2 {
     private static void calculate1(String filename){
         Util.applyAndPrint(filename, lines -> lines.map(line -> {
             var day = line.split(":");
-            var games = day[1].split(";");
-            var invalid = Stream.of(games).anyMatch(game -> !isValid(game));
+            var invalid = Util.split(day[1], ";").anyMatch(game -> !isValid(game));
             return invalid ? 0 : Integer.parseInt(day[0].split(" ")[1]);
         }).reduce(0, (a, b) -> a + b).toString()); 
     }
 
     private static boolean isValid(String game) {
-        for(var color: game.split(",")){
-            var colorSplit = color.strip().split(" ");
-            if(Integer.parseInt(colorSplit[0]) > RGB_INPUT.get(colorSplit[1]))
-                return false;
-        }
-        return true;
+        return Util.split(game,",")
+            .noneMatch(color -> {
+                var colorSplit = color.strip().split(" ");
+                return Integer.parseInt(colorSplit[0]) > RGB_INPUT.get(colorSplit[1]);
+            });
     }
 
     private static void calculate2(String filename){
         Util.applyAndPrint(filename, lines -> lines.map(line -> {
             var day = line.split(":");
-            var games = day[1].split(";");
-            var max = Stream.of(games)
+            var max = Util.split(day[1], ";")
                 .map(game -> gameToMap(game))
                 .reduce(Map.of("red", 0, "green", 0, "blue", 0), (current, next) -> getMaxOf(current, next));
             return max.values().stream().reduce(1, (a,b) -> a*b);
@@ -44,7 +41,7 @@ public class Day2 {
     }
 
     private static Map<String, Integer> gameToMap(String game){
-        return Stream.of(game.split(","))
+        return Util.split(game, ",")
             .map(color -> color.strip().split(" "))
             .collect(Collectors.toMap(split -> split[1], split -> Integer.parseInt(split[0])));
     }
