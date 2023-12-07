@@ -49,8 +49,8 @@ public class Day6 {
 
         @Override
         public int compare(Hand hand1, Hand hand2) {
-            var groups1 = getGroups(hand1);
-            var groups2 = getGroups(hand2);
+            var groups1 = getGroups(hand1.cards);
+            var groups2 = getGroups(hand2.cards);
             var hand1WithJokers = groups1.get(0).count + hand1.jokers;
             var hand2WithJokers = groups2.get(0).count + hand2.jokers;
             if(hand1WithJokers != hand2WithJokers)
@@ -63,8 +63,7 @@ public class Day6 {
                 .findFirst().orElse(0);
         }
 
-        private List<Group> getGroups(Day6.Hand hand) {
-            var cards = hand.cards();
+        private List<Group> getGroups(List<Integer> cards) {
             return IntStream.range(2, 15)
                 .mapToObj(i -> new Group(i, Collections.frequency(cards, i)))
                 .sorted(new Comparator<Group>() {
