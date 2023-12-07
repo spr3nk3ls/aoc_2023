@@ -19,8 +19,7 @@ public class Day5 {
         Util.applyToFile(filename, file -> {
             var splitFile = file.split("\n\n");
             var seeds = Stream.of(splitFile[0].split(":")[1].strip().split("\\s+")).map(i -> new BigInteger(i));
-            seeds = getFinalSeeds(seeds, splitFile);
-            System.out.println(seeds.min(Comparator.naturalOrder()).orElseThrow());
+            System.out.println(getFinalSeeds(seeds, splitFile).min(Comparator.naturalOrder()).orElseThrow());
         });
     }
 
@@ -31,9 +30,8 @@ public class Day5 {
             var seeds = Stream.concat(
                 Stream.iterate(numInput.get(0), i -> i.add(BigInteger.ONE)).limit(numInput.get(1).longValue()),
                 Stream.iterate(numInput.get(2), i -> i.add(BigInteger.ONE)).limit(numInput.get(3).longValue())
-            );
-            seeds = getFinalSeeds(seeds, splitFile);
-            System.out.println(seeds.min(Comparator.naturalOrder()).orElseThrow());
+            ).parallel();
+            System.out.println(getFinalSeeds2(seeds, splitFile).min(Comparator.naturalOrder()).orElseThrow());
         });
     }
 
@@ -45,16 +43,22 @@ public class Day5 {
         return seeds;
     }
 
+    private static Stream<BigInteger> getFinalSeeds2(Stream<BigInteger> seeds, String[] splitFile){
+        var mappings = IntStream.range(1, splitFile.length).mapToObj(i -> getMappings(splitFile[i]).toList());
+        return mappings.reduce(seeds, (seed, m) -> seed.map(s -> transform(s, m)), (s1, s2) -> s2);
+    }
+
     private static Stream<Mapping> getMappings(String mappingString){
         var split = mappingString.split("\n");
         return IntStream.range(1, split.length).mapToObj(i -> {
             var numbers = Util.split(split[i], " ").map(j -> new BigInteger(j)).toList();
             return new Mapping(numbers.get(0), numbers.get(1), numbers.get(2));
-        });
+        }).parallel();
     }
 
     private static BigInteger transform(BigInteger source, List<Mapping> mappings){
-        return mappings.stream().filter(m -> (source.compareTo(m.sourceStart) >= 0 && source.compareTo(m.sourceStart.add(m.range)) <= 0))
+        return mappings.parallelStream()
+            .filter(m -> (source.compareTo(m.sourceStart) >= 0 && source.compareTo(m.sourceStart.add(m.range)) <= 0))
             .map(m -> source.add(m.targetStart).subtract(m.sourceStart))
             .findAny().orElse(source);
     }
