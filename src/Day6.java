@@ -63,7 +63,7 @@ public class Day6 {
                 .findFirst().orElse(0);
         }
 
-        private List<Group> getGroups(List<Integer> cards) {
+        private static final List<Group> getGroups(List<Integer> cards) {
             return IntStream.range(2, 15)
                 .mapToObj(i -> new Group(i, Collections.frequency(cards, i)))
                 .sorted(new Comparator<Group>() {
