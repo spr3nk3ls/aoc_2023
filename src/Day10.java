@@ -15,11 +15,6 @@ public class Day10 {
             this.y = y;
         }
     }
-    @FunctionalInterface
-    public interface TriConsumer<T, U, V> {
-        void apply(T t, U u, V v);
-    }
-
     public static void main(String[] args) {
         calculate("src/day10/example.txt", Direction.W, 'F', 'I');
         calculate("src/day10/example2.txt", Direction.W, 'F', 'O');
