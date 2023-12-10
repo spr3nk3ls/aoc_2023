@@ -25,8 +25,8 @@ public class Day9 {
             .map(i -> original[i + 1] - original[i])
             .mapToObj(Integer::valueOf)
             .toArray(size -> new Integer[size]);
-        var last = firstOrLast.apply(oneLower);
+        var fol = firstOrLast.apply(oneLower);
         return Arrays.stream(oneLower).allMatch(i -> i==0) ? number : 
-            getDiffs(oneLower, number + sw*last, firstOrLast, parity*sw, parity);
+            getDiffs(oneLower, number + sw*fol, firstOrLast, parity*sw, parity);
     }
 }
