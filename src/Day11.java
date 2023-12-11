@@ -28,6 +28,8 @@ public class Day11 {
               .mapToObj(x -> new Galaxy(BigInteger.valueOf(x), BigInteger.valueOf(y))))
           .toArray(Galaxy[]::new);
 
+      var expansionDiff = BigInteger.valueOf(expansion - 1);
+
       var x_coor = Arrays.stream(galaxies).map(g -> g.x).toList();
       IntStream.iterate(x_length - 1, i -> i - 1)
           .limit(x_length)
@@ -35,7 +37,7 @@ public class Day11 {
           .forEach(x -> {
             for (int i = 0; i < galaxies.length; i++) {
               if (galaxies[i].x.compareTo(BigInteger.valueOf(x)) > 0)
-                galaxies[i] = new Galaxy(galaxies[i].x.add(BigInteger.valueOf(expansion - 1)), galaxies[i].y);
+                galaxies[i] = new Galaxy(galaxies[i].x.add(expansionDiff), galaxies[i].y);
             }
           });
 
@@ -46,13 +48,13 @@ public class Day11 {
           .forEach(y -> {
             for (int i = 0; i < galaxies.length; i++) {
               if (galaxies[i].y.compareTo(BigInteger.valueOf(y)) > 0)
-                galaxies[i] = new Galaxy(galaxies[i].x, galaxies[i].y.add(BigInteger.valueOf(expansion - 1)));
+                galaxies[i] = new Galaxy(galaxies[i].x, galaxies[i].y.add(expansionDiff));
             }
           });
 
       var result = Arrays.stream(galaxies)
           .flatMap(g1 -> Arrays.stream(galaxies).map(g2 -> g1.x.subtract(g2.x).abs().add(g1.y.subtract(g2.y).abs())))
-          .reduce(BigInteger.valueOf(0), BigInteger::add);
+          .reduce(BigInteger.ZERO, BigInteger::add);
       System.out.println(result.divide(BigInteger.TWO));
     });
   }
