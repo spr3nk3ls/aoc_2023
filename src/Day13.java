@@ -1,4 +1,5 @@
 import java.util.Iterator;
+import java.util.function.BiFunction;
 import java.util.stream.IntStream;
 
 public class Day13 {
@@ -25,13 +26,13 @@ public class Day13 {
         var y_length = matrix.length;
 
         var x_mirror = IntStream.range(0, x_length - 1)
-                .filter(x -> rowsEqual(matrix, x, y_length, x_length))
+                .filter(x -> linesEqual(matrix, x, y_length, x_length, (y, i) -> matrix[y][i]))
                 .findAny().orElse(-1);
         if (x_mirror != -1)
             return x_mirror + 1;
 
         var y_mirror = IntStream.range(0, y_length - 1)
-                .filter(y -> colsEqual(matrix, y, x_length, y_length))
+                .filter(y -> linesEqual(matrix, y, x_length, y_length, (x, i) -> matrix[i][x]))
                 .findAny().orElse(-1);
         if (y_mirror != -1)
             return 100 * (y_mirror + 1);
@@ -39,30 +40,17 @@ public class Day13 {
         return 0;
     }
 
-    private static boolean colsEqual(char[][] matrix, int index, int line_length, int mat_length) {
+    private static boolean linesEqual(char[][] matrix, int index, int line_length, int mat_length,
+            BiFunction<Integer, Integer, Character> matFunction) {
         var it1 = IntStream.iterate(0, i -> i + 1)
                 .takeWhile(i -> index - i >= 0)
                 .boxed()
-                .flatMap(i -> IntStream.range(0, line_length).mapToObj(x -> matrix[index - i][x]))
+                .flatMap(i -> IntStream.range(0, line_length).mapToObj(x -> matFunction.apply(x, index - i)))
                 .iterator();
         var it2 = IntStream.iterate(0, i -> i + 1)
                 .takeWhile(i -> index + i + 1 < mat_length)
                 .boxed()
-                .flatMap(i -> IntStream.range(0, line_length).mapToObj(x -> matrix[index + i + 1][x]))
-                .iterator();
-        return itsEqual(it1, it2);
-    }
-
-    private static boolean rowsEqual(char[][] matrix, int index, int line_length, int mat_length) {
-        var it1 = IntStream.iterate(0, i -> i + 1)
-                .takeWhile(i -> index - i >= 0)
-                .boxed()
-                .flatMap(i -> IntStream.range(0, line_length).mapToObj(y -> matrix[y][index - i]))
-                .iterator();
-        var it2 = IntStream.iterate(0, i -> i + 1)
-                .takeWhile(i -> index + i + 1 < mat_length)
-                .boxed()
-                .flatMap(i -> IntStream.range(0, line_length).mapToObj(y -> matrix[y][index + i + 1]))
+                .flatMap(i -> IntStream.range(0, line_length).mapToObj(x -> matFunction.apply(x, index + i + 1)))
                 .iterator();
         return itsEqual(it1, it2);
     }
@@ -70,12 +58,11 @@ public class Day13 {
     /*
      * Part one
      */
-    // private static boolean itsEqual(Iterator<Character> one, Iterator<Character>
-    // two) {
-    // while (one.hasNext() && two.hasNext())
-    // if (one.next() != two.next())
-    // return false;
-    // return true;
+    // private static boolean itsEqual(Iterator<Character> one, Iterator<Character> two) {
+    //     while (one.hasNext() && two.hasNext())
+    //         if (one.next() != two.next())
+    //             return false;
+    //     return true;
     // }
 
     /*
