@@ -7,10 +7,10 @@ import java.util.stream.IntStream;
 
 public class Day14 {
     public static void main(String[] args) {
-        // calculate("src/day14/example.txt", matrix -> rollNorth(matrix));
-        // calculate("src/day14/input.txt");
+        calculate("src/day14/example.txt", matrix -> rollNorth(matrix));
+        calculate("src/day14/input.txt", matrix -> rollNorth(matrix));
         calculate("src/day14/example.txt", matrix -> fullRoll(matrix));
-        calculate("src/day14/input.txt", matrix -> fullRoll(matrix));
+        calculate("src/day14/input.txt", matrix -> fullRoll(matrix)); 
     }
 
     private static void calculate(String filename, Consumer<char[][]> roll) {
@@ -22,7 +22,7 @@ public class Day14 {
             var y_length = matrix.length;
             List<String> matlist = new ArrayList<>();
             List<Integer> sumlist = new ArrayList<>();
-            for (int i = 0; i < 10000; i++) {
+            while(true){
                 roll.accept(matrix);
                 int sum = IntStream.range(0, y_length).map(y -> {
                     var rowsum = (int) IntStream.range(0, x_length).filter(x -> matrix[y][x] == 'O').count();
@@ -35,10 +35,14 @@ public class Day14 {
                 matlist.add(matrixAsString);
                 sumlist.add(sum);
             }
+            if(sumlist.size() == 1){
+                System.out.println(sumlist.get(0));
+                return;
+            }
             var tail = matlist.indexOf(toString(matrix));
             var cycleLength = matlist.size() - tail;
-            var last = (BigInteger.valueOf(1000000000).min(BigInteger.valueOf(tail))).mod(BigInteger.valueOf(cycleLength));
-            System.out.println(sumlist.get(last.intValue() + tail + 1));
+            var last = (int)(1000000000L - tail) % cycleLength;
+            System.out.println(sumlist.get(last + tail - 1));
         });
     }
 
@@ -53,12 +57,6 @@ public class Day14 {
         return IntStream.range(0, matrix.length).mapToObj(y -> {
             return new String(matrix[y]);
         }).collect(Collectors.joining("\n"));
-    }
-
-    private static void print(char[][] matrix) {
-        for (char[] line : matrix) {
-            System.out.println(new String(line));
-        }
     }
 
     private static void rollNorth(char[][] matrix) {
