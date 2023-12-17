@@ -3,6 +3,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -18,14 +19,15 @@ public class Day17 {
     }
 
     public static void main(String[] args) {
-        calculate_a("src/day17/example.txt");
-        // calculate_a("src/day17/input.txt");
+        Predicate<Node> aFilter = node -> node.steps < 3; 
+        calculate_a("src/day17/example.txt", aFilter);
+        calculate_a("src/day17/input.txt", aFilter);
         calculate_b("src/day17/example.txt");
         calculate_b("src/day17/example2.txt");
-        calculate_b("src/day17/input.txt"); //810 too high
+        calculate_b("src/day17/input.txt"); 
     }
 
-    private static void calculate_a(String filename) {
+    private static void calculate_a(String filename, Predicate<Node> filter) {
         Util.applyToFile(filename, asString -> {
             var matrix = Util.split(asString, "\n")
                     .map(line -> Util.split(line, "").map(Integer::parseInt).toArray(Integer[]::new))
@@ -33,7 +35,7 @@ public class Day17 {
             var max_x = matrix[0].length;
             var max_y = matrix.length;
 
-            var finalNodes = calculate(matrix, max_x, max_y, node -> getNextNodes_a(node, matrix, max_x, max_y));
+            var finalNodes = calculate(matrix, max_x, max_y, node -> getNextNodes_a(node, matrix, max_x, max_y, filter));
             System.out.println(finalNodes.stream().map(Node::value).min(Comparator.naturalOrder()).get());
         });
     }
@@ -59,7 +61,10 @@ public class Day17 {
         var visited = IntStream.range(0, max_y)
                 .mapToObj(y -> IntStream.range(0, max_x).mapToObj(x -> new HashSet<Node>()).toList()).toList();
 
-        var nodes = List.of(new Node(new Coordinates(0, 0), 0, new Coordinates(1, 0), 0));
+        var nodes = List.of(
+            new Node(new Coordinates(0, 0), 0, new Coordinates(1, 0), 0),
+            new Node(new Coordinates(0, 0), 0, new Coordinates(0, 1), 0)
+        );
         while (!nodes.isEmpty()) {
             nodes = nodes.stream()
                     .flatMap(node -> nextFunction.apply(node))
@@ -71,7 +76,7 @@ public class Day17 {
         return visited.get(max_y - 1).get(max_x - 1);
     }
 
-    private static Stream<Node> getNextNodes_a(Node source, Integer[][] matrix, int max_x, int max_y) {
+    private static Stream<Node> getNextNodes_a(Node source, Integer[][] matrix, int max_x, int max_y, Predicate<Node> filter) {
         return Stream.of(
                 new Coordinates(-source.direction.y, source.direction.x),
                 new Coordinates(source.direction.y, -source.direction.x),
@@ -89,7 +94,7 @@ public class Day17 {
                             source.value + matrix[newCoordinates.y][newCoordinates.x],
                             direction,
                             direction.equals(source.direction) ? source.steps + 1 : 0);
-                }).filter(node -> node.steps <= 3);    
+                }).filter(filter);    
     }
 
     private static Stream<Node> getNextNodes_b(Node source, Integer[][] matrix, int max_x, int max_y) {
