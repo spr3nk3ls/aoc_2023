@@ -19,7 +19,7 @@ public class Day17 {
 
     public static void main(String[] args) {
         calculate_a("src/day17/example.txt");
-        calculate_a("src/day17/input.txt");
+        // calculate_a("src/day17/input.txt");
         calculate_b("src/day17/example.txt");
         calculate_b("src/day17/example2.txt");
         calculate_b("src/day17/input.txt"); //810 too high
@@ -89,7 +89,7 @@ public class Day17 {
                             source.value + matrix[newCoordinates.y][newCoordinates.x],
                             direction,
                             direction.equals(source.direction) ? source.steps + 1 : 0);
-                }).filter(node -> node.steps < 3);    
+                }).filter(node -> node.steps <= 3);    
     }
 
     private static Stream<Node> getNextNodes_b(Node source, Integer[][] matrix, int max_x, int max_y) {
@@ -113,20 +113,20 @@ public class Day17 {
                 })
                 .filter(node -> {
                     if(node.direction.equals(source.direction))
-                        return node.steps < 10;
+                        return node.steps <= 10;
                     if(source.steps < 4)
                         return false;
                     switch (node.direction.x) {
                         case 1:
                             return node.coordinates.x < max_x - 3;
                         case -1:
-                            return node.coordinates.x > 2;
+                            return node.coordinates.x >= 3;
                         default:
                             switch(node.direction.y){
                                 case 1:
                                     return node.coordinates.y < max_y - 3;
                                 case -1:
-                                    return node.coordinates.y > 2;
+                                    return node.coordinates.y >= 3;
                                 default:
                                     throw new RuntimeException();
                             }
