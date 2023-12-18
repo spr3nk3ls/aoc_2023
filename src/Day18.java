@@ -82,7 +82,7 @@ public class Day18 {
     var lines = toLines(instructions);
     var horizontalLines = lines.stream()
         .filter(line -> line.start.x == line.end.x)
-        .map(Day18::normalize)
+        .map(line -> line.start.y < line.end.y ? line : new Line(line.end, line.start))
         .toList();
 
     var startbreaks = horizontalLines.stream().map(hl -> hl.start.y);
@@ -122,13 +122,6 @@ public class Day18 {
       }
     }
     return area.add(overlap).toString();
-  }
-
-  private static Line normalize(Line line) {
-    if (line.start.y < line.end.y) {
-      return new Line(line.start, new Coordinates(line.end.x, line.end.y));
-    }
-    return new Line(line.end, new Coordinates(line.start.x, line.start.y));
   }
 
   private static Stream<Line> divide(Line line, List<Integer> divides) {
