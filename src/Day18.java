@@ -8,18 +8,10 @@ import java.util.stream.Stream;
 
 public class Day18 {
 
-  record Hole(Coordinates coordinates, Type type) {
-  }
-
   record Line(Coordinates start, Coordinates end) {
   }
 
-  enum Type {
-    LOOP, INSIDE, OUTSIDE
-  }
-
   record Coordinates(int x, int y) {
-
     public Coordinates add(Coordinates direction, int times) {
       return new Coordinates(this.x + times * direction.x, this.y + times * direction.y);
     }
