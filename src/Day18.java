@@ -47,8 +47,8 @@ public class Day18 {
   public static void main(String[] args) {
     calculate_a("src/day18/example.txt");
     calculate_a("src/day18/input.txt");
-    calculate_b("src/day18/example.txt"); // 952408144115 correct
-    calculate_b("src/day18/input.txt"); // 85124524530253 too low
+    calculate_b("src/day18/example.txt");
+    calculate_b("src/day18/input.txt");
   }
 
   private static void calculate_a(String filename) {
