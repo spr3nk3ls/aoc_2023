@@ -13,7 +13,7 @@ public class Day19b {
         A, R
     }
 
-    record Test(String key, String testAsString, Predicate<Integer> test) {
+    record Test(String key, Predicate<Integer> test) {
     }
 
     static class Either {
@@ -88,28 +88,30 @@ public class Day19b {
     private static void backtrack(Node node, List<List<Test>> fullList, List<Test> currentTrack) {
         if (node.t.result == Result.A) {
             var newTrack = new ArrayList<>(currentTrack);
-            newTrack.add(new Test(node.test.substring(0, 1), node.test,
-                    toPredicate(node.test.substring(1, node.test.length()), true)));
+            newTrack.add(toTest(node.test, true));
             fullList.add(newTrack);
         }
         if (node.f.result == Result.A) {
             var newTrack = new ArrayList<>(currentTrack);
-            newTrack.add(new Test(node.test.substring(0, 1), "!" + node.test,
-                    toPredicate(node.test.substring(1, node.test.length()), false)));
+            newTrack.add(toTest(node.test, false));
             fullList.add(newTrack);
         }
         if (node.t.node != null) {
             var newTrack = new ArrayList<>(currentTrack);
-            newTrack.add(new Test(node.test.substring(0, 1), node.test,
-                    toPredicate(node.test.substring(1, node.test.length()), true)));
+            newTrack.add(toTest(node.test, true));
             backtrack(node.t.node, fullList, newTrack);
         }
         if (node.f.node != null) {
             var newTrack = new ArrayList<>(currentTrack);
-            newTrack.add(new Test(node.test.substring(0, 1), "!" + node.test,
-                    toPredicate(node.test.substring(1, node.test.length()), false)));
+            newTrack.add(toTest(node.test, false));
             backtrack(node.f.node, fullList, newTrack);
         }
+    }
+
+    private static Test toTest(String test, boolean b) {
+        var key = test.substring(0, 1);
+        var predicate = toPredicate(test.substring(1, test.length()), b);
+        return new Test(key, predicate);
     }
 
     private static Predicate<Integer> toPredicate(String substring, boolean b) {
