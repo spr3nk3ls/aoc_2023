@@ -25,101 +25,78 @@ public class Day20 {
         }
     }
 
-    static interface Module {
-        String getName();
+    static abstract class Module {
+        final String name;
+        final List<String> targets;
 
-        String activate(String from, boolean fromPulse);
+        Module(String name, List<String> targets) {
+            this.name = name;
+            this.targets = targets;
+        }
 
-        List<String> pulse(Map<String, Module> moduleMap, Counter counter);
+        public String getName() {
+            return name;
+        }
 
-        List<String> getTargets();
+        public List<String> getTargets() {
+            return targets;
+        }
 
-        default List<String> innerPulse(Map<String, Module> moduleMap, Counter counter, boolean pulse) {
+        List<String> pulse(Map<String, Module> moduleMap, Counter counter) {
             var visited = new ArrayList<String>();
             for (var target : getTargets()) {
-                if(getTargets().contains("rx") && pulse == false){
-                    System.out.println(counter.tCount);
-                    System.out.println(counter.fCount);
-                    throw new RuntimeException();
-                }
-                if (pulse) {
+                if (getPulse()) {
                     counter.tCount = counter.tCount.add(BigInteger.ONE);
                 } else {
                     counter.fCount = counter.fCount.add(BigInteger.ONE);
                 }
-                if (moduleMap.containsKey(target))
-                    visited.add(moduleMap.get(target).activate(getName(), pulse));
+                if (moduleMap.containsKey(target) && moduleMap.get(target).activate(getName(), getPulse()))
+                    visited.add(target);
             }
             return visited;
         }
+
+        abstract boolean activate(String from, boolean fromPulse);
+
+        abstract boolean getPulse();
     }
 
-    static class FlipFlop implements Module {
+    static class FlipFlop extends Module {
 
-        private final String name;
         private boolean on;
-        private List<String> targets;
 
         FlipFlop(String name, List<String> targets) {
-            this.name = name;
-            this.targets = targets;
+            super(name, targets);
             on = false;
         }
 
         @Override
-        public String toString() {
-            return name + " " + targets.toString() + " flip " + on;
-        }
-
-        @Override
-        public String getName() {
-            return name;
-        }
-
-        @Override
-        public List<String> getTargets() {
-            return targets;
-        }
-
-        @Override
-        public String activate(String from, boolean fromPulse) {
+        public boolean activate(String from, boolean fromPulse) {
             if (fromPulse == false) {
                 on = !on;
-                return name;
+                return true;
             }
-            return null;
+            return false;
         }
 
         @Override
-        public List<String> pulse(Map<String, Module> moduleMap, Counter counter) {
-            return innerPulse(moduleMap, counter, on);
+        boolean getPulse() {
+            return on;
         }
     }
 
-    static class Conjunction implements Module {
+    static class Conjunction extends Module {
 
-        private final String name;
         private Map<String, Boolean> sources = new HashMap<>();
-        private List<String> targets;
 
         Conjunction(String name, List<String> targets) {
-            this.name = name;
-            this.targets = targets;
+            super(name, targets);
         }
 
         @Override
-        public String toString() {
-            return name + " " + targets.toString() + " sources " + sources;
-        }
-
-        @Override
-        public String getName() {
-            return name;
-        }
-
-        @Override
-        public List<String> getTargets() {
-            return targets;
+        public boolean activate(String from, boolean fromPulse) {
+            sources.put(from, fromPulse);
+            return true;
         }
 
         public void addSource(String name) {
@@ -127,54 +104,28 @@ public class Day20 {
         }
 
         @Override
-        public String activate(String from, boolean fromPulse) {
-            if (!sources.containsKey(from)) {
-                throw new RuntimeException();
-            }
-            sources.put(from, fromPulse);
-            return name;
-        }
-
-        @Override
-        public List<String> pulse(Map<String, Module> moduleMap, Counter counter) {
-            var pulse = sources.values().stream().allMatch(i -> i == true) ? false : true;
-            return innerPulse(moduleMap, counter, pulse);
+        boolean getPulse() {
+            return !sources.values().stream().allMatch(v -> v == true);
         }
     }
 
-    static class Broadcaster implements Module {
+    static class Broadcaster extends Module {
 
-        private List<String> targets;
         private boolean highPulse;
 
         Broadcaster(List<String> targets) {
-            this.targets = targets;
+            super("broadcaster", targets);
         }
 
         @Override
-        public String toString() {
-            return "broadcaster " + targets.toString();
-        }
-
-        @Override
-        public String getName() {
-            return "broadcaster";
-        }
-
-        @Override
-        public List<String> getTargets() {
-            return targets;
-        }
-
-        @Override
-        public String activate(String from, boolean fromPulse) {
+        public boolean activate(String from, boolean fromPulse) {
             highPulse = fromPulse;
-            return null;
+            return false;
         }
 
         @Override
-        public List<String> pulse(Map<String, Module> moduleMap, Counter counter) {
-            return innerPulse(moduleMap, counter, highPulse);
+        boolean getPulse() {
+            return highPulse;
         }
     }
 
@@ -187,9 +138,8 @@ public class Day20 {
 
     private static void calculate_a(String filename) {
         Util.applyToLines(filename, lines -> {
-            Map<String, Module> moduleMap = toModuleMap(lines);
-            setSources(moduleMap);
-            var result = IntStream.range(0, 1000).mapToObj(i -> {
+            var moduleMap = toModuleMap(lines);
+            var result = IntStream.range(0, 1000).mapToObj(j -> {
                 var counter = cycle(moduleMap);
                 return counter;
             }).reduce(new Counter(), (a, b) -> a.add(b));
@@ -199,17 +149,22 @@ public class Day20 {
 
     private static void calculate_b(String filename) {
         Util.applyToLines(filename, lines -> {
-            Map<String, Module> moduleMap = toModuleMap(lines);
-            setSources(moduleMap);
-            var i = BigInteger.ZERO;
-            while(true){
-                i = i.add(BigInteger.ONE);
-                try {
-                    cycle(moduleMap);
-                } catch (RuntimeException e){
-                    System.out.println(i);
+            var product = BigInteger.ONE;
+            var conjunctions = List.of("vv", "nt", "vn", "zq"); // Conjunctions three steps from final module
+            var lineList = lines.toList();
+            for (var conjunction : conjunctions) {
+                var moduleMap = toModuleMap(lineList.stream());
+                var j = 0;
+                while (true) {
+                    j++;
+                    var part = cycle_i(moduleMap, j, conjunction);
+                    if (part != 0) {
+                        product = product.multiply(BigInteger.valueOf(part));
+                        break;
+                    }
                 }
             }
+            System.out.println(product);
         });
     }
 
@@ -222,15 +177,32 @@ public class Day20 {
         while (!queue.isEmpty()) {
             var name = queue.remove();
             if (moduleMap.containsKey(name))
-                moduleMap.get(name).pulse(moduleMap, counter).stream().filter(i -> i != null).forEach(queue::add);
+                moduleMap.get(name).pulse(moduleMap, counter).stream().filter(j -> j != null).forEach(queue::add);
         }
         return counter;
     }
 
+    private static int cycle_i(Map<String, Module> moduleMap, int i, String conjunction) {
+        moduleMap.get("broadcaster").activate(null, false);
+        var queue = new PriorityQueue<String>();
+        queue.add("broadcaster");
+        while (!queue.isEmpty()) {
+            var name = queue.remove();
+            if (moduleMap.containsKey(name))
+                moduleMap.get(name).pulse(moduleMap, new Counter()).stream().filter(j -> j != null).forEach(queue::add);
+            if (!((Conjunction) moduleMap.get(conjunction)).getPulse()) {
+                return i;
+            }
+        }
+        return 0;
+    }
+
     private static Map<String, Module> toModuleMap(Stream<String> lines) {
-        return lines.map(line -> line.strip())
+        var map = lines.map(line -> line.strip())
                 .map(Day20::toModule)
                 .collect(Collectors.toMap(m -> m.getName(), m -> m));
+        setSources(map);
+        return map;
     }
 
     private static Module toModule(String line) {
