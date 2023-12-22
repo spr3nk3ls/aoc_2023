@@ -5,8 +5,10 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 class Day22 {
 
@@ -42,31 +44,21 @@ class Day22 {
     }
 
     public static void main(String[] args) {
-        calculate("src/day22/example.txt");
-        calculate("src/day22/input.txt");
-        calculate_b("src/day22/example.txt");
-        calculate_b("src/day22/input.txt");
+        calculate("src/day22/example.txt", (stream, map) -> (int)stream.filter(b -> canDisappear(b, map)).count());
+        calculate("src/day22/input.txt", (stream, map) -> (int)stream.filter(b -> canDisappear(b, map)).count());
+        calculate("src/day22/example.txt", (stream, map) -> stream.mapToInt(b -> numberOfFallingBlocks(b, map)).sum());
+        calculate("src/day22/input.txt", (stream, map) -> stream.mapToInt(b -> numberOfFallingBlocks(b, map)).sum());
     }
 
-    private static void calculate(String filename) {
-        Util.applyAndPrint(filename, lines -> {
-            var blocks = lines.map(line -> toBlock(line, null)).toList();
-            var map = blocksMap(blocks);
-            blocks = letBlocksFall(map);
-            var newMap = blocksMap(blocks);
-            var result = blocks.stream().filter(b -> canDisappear(b, newMap)).count();
-            return String.valueOf(result);
-        });
-    }
-
-    private static void calculate_b(String filename) {
+    private static void calculate(String filename, BiFunction<Stream<Block>, Map<Integer ,List<Block>>, Integer> function) {
         Util.applyAndPrint(filename, lines -> {
             var lineList = lines.toList();
             var blocks = IntStream.range(0, lineList.size()).mapToObj(i -> toBlock(lineList.get(i), i)).toList();
             var map = blocksMap(blocks);
-            blocks = letBlocksFall(map);
-            var newMap = blocksMap(blocks);
-            var result = blocks.stream().mapToInt(b -> numberOfFallingBlocks(b, newMap)).sum();
+            blocks = new ArrayList<Block>();
+            letBlocksFall(map, blocks);
+            map = blocksMap(blocks);
+            var result = function.apply(blocks.stream(), map);
             return String.valueOf(result);
         });
     }
@@ -82,14 +74,11 @@ class Day22 {
         return new Block(lineNumber, coordinates);
     }
 
-    private static List<Block> letBlocksFall(Map<Integer, List<Block>> blocks) {
+    private static Integer letBlocksFall(Map<Integer, List<Block>> blocks, List<Block> newList) {
         var min = blocks.keySet().stream().min(Comparator.naturalOrder()).get();
         var max = blocks.keySet().stream().max(Comparator.naturalOrder()).get();
-        var newList = new ArrayList<Block>();
+        var result = new HashSet<Integer>();
         for (int i = min; i <= max; i++) {
-            if (!blocks.containsKey(i)) {
-                continue;
-            }
             var blockList = new ArrayList<>(blocks.get(i));
             for (var block : blockList) {
                 while (true) {
@@ -100,11 +89,12 @@ class Day22 {
                         blocks.get(block.bottom()).add(block);
                         break;
                     }
+                    result.add(block.lineNumber());
                     block = blockFall;
                 }
             }
         }
-        return newList;
+        return result.size();
     }
 
     private static List<Block> getFiveLayersBelow(Map<Integer, List<Block>> blocks, Integer topLayer) {
@@ -140,7 +130,7 @@ class Day22 {
     private static int numberOfFallingBlocks(Block block, Map<Integer, List<Block>> blocks) {
         var copiedBlocks = deepCopy(blocks);
         copiedBlocks.get(block.bottom()).remove(block);
-        return howManyBlocksFall(copiedBlocks);
+        return letBlocksFall(copiedBlocks, new ArrayList<>());
     }
 
     private static Map<Integer, List<Block>> deepCopy(Map<Integer, List<Block>> blocks) {
@@ -148,30 +138,5 @@ class Day22 {
             i -> i, 
             i -> new ArrayList<>(blocks.get(i).stream().toList())
         ));
-    }
-
-    private static Integer howManyBlocksFall(Map<Integer, List<Block>> blocks) {
-        var min = blocks.keySet().stream().min(Comparator.naturalOrder()).get();
-        var max = blocks.keySet().stream().max(Comparator.naturalOrder()).get();
-        var result = new HashSet<Integer>();
-        for (int i = min; i <= max; i++) {
-            if (!blocks.containsKey(i)) {
-                continue;
-            }
-            var blockList = new ArrayList<>(blocks.get(i));
-            for (var block : blockList) {
-                while (true) {
-                    blocks.get(i).remove(block);
-                    var blockFall = block.fall(getFiveLayersBelow(blocks, block.bottom()));
-                    if (blockFall == null) {
-                        blocks.get(block.bottom()).add(block);
-                        break;
-                    }
-                    result.add(block.lineNumber());
-                    block = blockFall;
-                }
-            }
-        }
-        return result.size();
     }
 }
