@@ -20,9 +20,9 @@ public class Day25 {
         Util.applyAndPrint(filename, fileLines -> {
             Map<String, List<String>> map = toMap(fileLines); 
             var count1 = countNodes(map, pairs.get(0).get(0));
-            map = disconnect(map, pairs);
             print(map);
             // $ neato -Tsvg output.dot > output.svg
+            map = disconnect(map, pairs);
             var count2 = countNodes(map, pairs.get(0).get(0));
             return String.valueOf(count2*(count1 - count2));
         });
